@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, FormEvent, useEffect } from 'react'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -11,10 +11,20 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [configError, setConfigError] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setConfigError(true)
+      setError('Supabase is not configured. Please set up your environment variables.')
+    }
+  }, [])
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault()
+    if (configError) return
+    
     setLoading(true)
     setError(null)
     setMessage(null)
@@ -41,6 +51,8 @@ export default function LoginPage() {
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault()
+    if (configError) return
+    
     setLoading(true)
     setError(null)
     setMessage(null)
@@ -64,6 +76,8 @@ export default function LoginPage() {
   }
 
   const handlePasswordReset = async () => {
+    if (configError) return
+    
     if (!email) {
       setError('Please enter your email address')
       return

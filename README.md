@@ -10,7 +10,7 @@ A Next.js application with Supabase authentication featuring a login page as the
 - ✉️ Email/Password authentication
 - 🔑 Password reset functionality
 - 📱 Responsive design
-- ⚡ Built with Next.js 15+ App Router
+- ⚡ Built with Next.js 16+ App Router
 
 ## Getting Started
 
