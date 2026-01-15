@@ -35,8 +35,8 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      console.log('Form submitted:', { email, password })
       // Handle login logic here
+      // In production, this would make an API call to authenticate the user
     }
   }
 
@@ -139,12 +139,16 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a 
-                  href="#" 
+                <button 
+                  type="button"
+                  onClick={() => {
+                    // Handle forgot password logic here
+                    // In production, this would navigate to a password reset page
+                  }}
                   className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
                   Forgot password?
-                </a>
+                </button>
               </div>
             </div>
 
@@ -210,12 +214,16 @@ export default function LoginPage() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <a 
-              href="#" 
+            <button 
+              type="button"
+              onClick={() => {
+                // Handle sign up navigation here
+                // In production, this would navigate to a sign up page
+              }}
               className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
             >
               Sign up for free
-            </a>
+            </button>
           </p>
         </div>
       </div>
