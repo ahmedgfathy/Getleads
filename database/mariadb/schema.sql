@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS leads (
   id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
   
   -- Basic Contact Information
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
+  first_name VARCHAR(100) NULL DEFAULT 'Unknown',
+  last_name VARCHAR(100) NULL DEFAULT 'Lead',
   email VARCHAR(255),
   phone VARCHAR(50),
   mobile VARCHAR(50),

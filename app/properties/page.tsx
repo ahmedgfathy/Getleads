@@ -42,15 +42,12 @@ export default function PropertiesPage() {
 
   const fetchProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setProperties(data || [])
+      const response = await fetch('/api/properties');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setProperties(data || []);
     } catch (error) {
-      console.error('Error fetching properties:', error)
+      console.error('Error fetching properties:', error);
     }
   }
 

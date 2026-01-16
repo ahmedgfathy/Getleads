@@ -27,14 +27,14 @@ function generateHash(data: Record<string, any>): string {
 }
 
 // Parse Excel/CSV files
-async function parseFile(filePath: string, fileType: string): Promise<any[]> {
+async function parseFile(buffer: Buffer, fileType: string): Promise<any[]> {
   if (fileType === 'xlsx' || fileType === 'xls') {
-    const workbook = XLSX.readFile(filePath);
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(worksheet);
   } else if (fileType === 'csv') {
-    const fileContent = await readFileContent(filePath);
+    const fileContent = buffer.toString('utf-8');
     return parseCSV(fileContent, {
       columns: true,
       skip_empty_lines: true,
@@ -42,11 +42,6 @@ async function parseFile(filePath: string, fileType: string): Promise<any[]> {
     });
   }
   return [];
-}
-
-async function readFileContent(filePath: string): Promise<string> {
-  const fs = require('fs').promises;
-  return await fs.readFile(filePath, 'utf-8');
 }
 
 // Map dynamic columns to core fields and custom_fields
@@ -81,6 +76,10 @@ function mapDataToEntity(
     ],
   };
 
+  // Numeric fields that must be numbers
+  const numericFields = ['price', 'area', 'bedrooms', 'bathrooms', 'floors', 'parking_spaces', 
+                         'year_built', 'employee_count', 'annual_revenue', 'property_budget'];
+
   const coreFields: Record<string, any> = {};
   const customFields: Record<string, any> = {};
   const allowedCoreFields = coreFieldMappings[entityType] || [];
@@ -96,14 +95,31 @@ function mapDataToEntity(
     normalizedData[normalizedKey] = value;
   });
 
-  // Separate core fields from custom fields
+  // Separate core fields from custom fields with type validation
   Object.entries(normalizedData).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      return; // Skip empty values
+    }
+
     if (allowedCoreFields.includes(key)) {
-      coreFields[key] = value;
-    } else if (value !== null && value !== undefined && value !== '') {
+      // If this is a numeric field, validate it's actually a number
+      if (numericFields.includes(key)) {
+        const numValue = typeof value === 'number' ? value : parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+        if (!isNaN(numValue)) {
+          coreFields[key] = numValue;
+        } else {
+          // Not a valid number, store in custom_fields with original column name
+          customFields[key] = value;
+        }
+      } else {
+        coreFields[key] = value;
+      }
+    } else {
       customFields[key] = value;
     }
   });
+
+  // No need to add defaults - database handles that now!
 
   return { coreFields, customFields };
 }
@@ -155,11 +171,14 @@ async function registerCustomFields(
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Upload API Started ===');
     await ensureUploadDir();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const entityType = formData.get('entityType') as string;
+
+    console.log('File received:', file?.name, 'Entity type:', entityType);
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -172,9 +191,11 @@ export async function POST(request: NextRequest) {
     const safeFileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.-]/gi, '_')}`;
     const filePath = join(UPLOAD_DIR, safeFileName);
     await writeFile(filePath, buffer);
+    console.log('File saved to:', filePath);
 
     // Create import job
     const jobId = crypto.randomUUID();
+    console.log('Creating import job:', jobId);
     await query(
       `INSERT INTO import_jobs (id, file_name, file_type, file_size, entity_type, status) 
        VALUES (?, ?, ?, ?, ?, 'processing')`,
@@ -182,61 +203,122 @@ export async function POST(request: NextRequest) {
     );
 
     // Parse file
-    const rows = await parseFile(filePath, fileType);
+    console.log('Parsing file...');
+    const rows = await parseFile(buffer, fileType);
+    console.log('Parsed rows:', rows.length);
     
     let importedCount = 0;
     let duplicateCount = 0;
     let errorCount = 0;
 
-    // Process each row
+    const tableName = entityType === 'contact' ? 'contacts' : entityType === 'property' ? 'properties' : entityType === 'organization' ? 'organizations' : 'leads';
+    
+    // Collect all custom fields first
+    const allCustomFields = new Set<string>();
+    const processedRows: Array<{ fields: Record<string, any>; rawData: any }> = [];
+
+    console.log('Processing rows...');
+    
+    // First pass: process all rows and collect custom fields
     for (let i = 0; i < rows.length; i++) {
       try {
         const rawData = rows[i];
         const { coreFields, customFields } = mapDataToEntity(rawData, entityType);
         const dataHash = generateHash({ ...coreFields, ...customFields });
 
-        // Check for duplicates
-        const duplicateCheck = await query(
-          `SELECT id FROM ${entityType === 'contact' ? 'contacts' : entityType === 'property' ? 'properties' : entityType === 'organization' ? 'organizations' : 'leads'} 
-           WHERE data_hash = ?`,
-          [dataHash]
-        );
+        // Collect custom field names
+        Object.keys(customFields).forEach(field => allCustomFields.add(field));
 
-        if (duplicateCheck.length > 0) {
-          duplicateCount++;
-          await query(
-            `INSERT INTO import_duplicates (import_job_id, entity_type, duplicate_hash, existing_record_id, new_data, match_reason, action_taken) 
-             VALUES (?, ?, ?, ?, ?, 'hash_match', 'skipped')`,
-            [jobId, entityType, dataHash, duplicateCheck[0].id, JSON.stringify(rawData)]
-          );
-          continue;
+        // Ensure we have at least SOME data - if no core fields, create a minimal record
+        if (Object.keys(coreFields).length === 0 && Object.keys(customFields).length === 0) {
+          errorCount++;
+          continue; // Skip completely empty rows
         }
 
-        // Register custom fields
-        if (Object.keys(customFields).length > 0) {
-          await registerCustomFields(entityType, customFields, file.name);
-        }
-
-        // Insert record
-        const tableName = entityType === 'contact' ? 'contacts' : entityType === 'property' ? 'properties' : entityType === 'organization' ? 'organizations' : 'leads';
         const fields = { ...coreFields, custom_fields: JSON.stringify(customFields), data_hash: dataHash };
-        const columns = Object.keys(fields).join(', ');
-        const placeholders = Object.keys(fields).map(() => '?').join(', ');
-        const values = Object.values(fields);
+        
+        // Filter out undefined and null values
+        const filteredFields: Record<string, any> = {};
+        Object.entries(fields).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            filteredFields[key] = value;
+          }
+        });
 
-        await query(
-          `INSERT INTO ${tableName} (id, ${columns}) VALUES (UUID(), ${placeholders})`,
-          values
-        );
-
-        importedCount++;
+        processedRows.push({ fields: filteredFields, rawData });
       } catch (error) {
         console.error(`Error processing row ${i}:`, error);
         errorCount++;
       }
     }
 
+    console.log(`Processed ${processedRows.length} rows, registering custom fields...`);
+
+    // Register all custom fields at once
+    if (allCustomFields.size > 0) {
+      const sampleCustomFields: Record<string, any> = {};
+      allCustomFields.forEach(field => {
+        sampleCustomFields[field] = 'sample';
+      });
+      await registerCustomFields(entityType, sampleCustomFields, file.name);
+    }
+
+    // Check for duplicates in batch
+    const hashes = processedRows.map(row => row.fields.data_hash);
+    const duplicateHashes = hashes.length > 0 ? await query(
+      `SELECT data_hash FROM ${tableName} WHERE data_hash IN (${hashes.map(() => '?').join(',')})`,
+      hashes
+    ) : [];
+    
+    const duplicateHashSet = new Set(duplicateHashes.map((d: any) => d.data_hash));
+
+    console.log(`Found ${duplicateHashSet.size} duplicates, preparing batch insert...`);
+
+    // Prepare batch insert
+    const batchSize = 100;
+    const rowsToInsert: typeof processedRows = [];
+    
+    for (const row of processedRows) {
+      if (duplicateHashSet.has(row.fields.data_hash)) {
+        duplicateCount++;
+        continue;
+      }
+      rowsToInsert.push(row);
+    }
+
+    // Insert in batches
+    for (let i = 0; i < rowsToInsert.length; i += batchSize) {
+      const batch = rowsToInsert.slice(i, i + batchSize);
+      
+      if (batch.length === 0) continue;
+
+      // Insert one by one to avoid complex batch logic issues
+      let batchSuccess = 0;
+      let batchFailed = 0;
+      
+      for (const row of batch) {
+        try {
+          const cols = Object.keys(row.fields).join(', ');
+          const vals = Object.values(row.fields);
+          const placeholders = vals.map(() => '?').join(', ');
+          await query(
+            `INSERT INTO ${tableName} (id, ${cols}) VALUES (UUID(), ${placeholders})`,
+            vals
+          );
+          batchSuccess++;
+          importedCount++;
+        } catch (err) {
+          console.error('Error inserting row:', err);
+          batchFailed++;
+          errorCount++;
+        }
+      }
+      
+      console.log(`Batch ${Math.floor(i / batchSize) + 1}: ${batchSuccess} success, ${batchFailed} failed (total: ${importedCount})`);
+    }
+
     // Update import job
+    console.log(`Import complete: ${importedCount} imported, ${duplicateCount} duplicates, ${errorCount} errors`);
     await query(
       `UPDATE import_jobs 
        SET total_rows = ?, imported_rows = ?, duplicate_rows = ?, error_rows = ?, 
@@ -256,7 +338,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('=== Upload error ===');
+    console.error('Error:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json(
       { error: 'Failed to process file', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

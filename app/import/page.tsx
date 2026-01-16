@@ -64,14 +64,19 @@ export default function ImportPage() {
           body: formData,
         });
 
+        const result = await response.json();
+
         if (response.ok) {
+          console.log(`✅ Successfully uploaded ${file.name}`, result);
           setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
         } else {
-          console.error(`Failed to upload ${file.name}`);
+          console.error(`❌ Failed to upload ${file.name}`, result);
+          alert(`Failed to upload ${file.name}\n\nError: ${result.error || 'Unknown error'}\nDetails: ${result.details || 'No details available'}`);
           setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
         }
       } catch (error) {
-        console.error(`Error uploading ${file.name}:`, error);
+        console.error(`❌ Error uploading ${file.name}:`, error);
+        alert(`Error uploading ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
       }
     }

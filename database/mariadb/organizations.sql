@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS organizations (
   id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
   
   -- Basic Information
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NULL DEFAULT 'Unknown Organization',
   legal_name VARCHAR(255),
   organization_type VARCHAR(50),
   industry VARCHAR(100),

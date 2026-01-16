@@ -6,12 +6,12 @@ CREATE TABLE IF NOT EXISTS properties (
   id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
   
   -- Property Classification
-  property_category VARCHAR(50) NOT NULL,
-  property_type VARCHAR(50) NOT NULL,
-  listing_type VARCHAR(50) NOT NULL,
+  property_category VARCHAR(50) NULL DEFAULT 'General',
+  property_type VARCHAR(50) NULL DEFAULT 'Other',
+  listing_type VARCHAR(50) NULL DEFAULT 'For Sale',
   
   -- Basic Information
-  title VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NULL DEFAULT 'Untitled Property',
   description TEXT,
   
   -- Location
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS properties (
   location_coordinates JSON DEFAULT NULL,
   
   -- Property Details
-  price DECIMAL(15, 2) NOT NULL,
+  price DECIMAL(15, 2) NULL,
   area DECIMAL(10, 2),
   bedrooms INTEGER,
   bathrooms INTEGER,
