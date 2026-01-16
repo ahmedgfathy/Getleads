@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
+import AdminHeader from '@/app/components/AdminHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,47 +129,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans" dir="rtl">
-      {/* Header */}
-      <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center font-bold text-xl shadow-inner border border-emerald-600">R</div>
-               <div>
-                  <h1 className="font-bold text-xl leading-none">لوحة التحكم</h1>
-                  <span className="text-xs text-slate-400">الرواد العقارية</span>
-               </div>
-            </div>
-            
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex gap-1 bg-slate-800/50 p-1 rounded-xl">
-               <Link href="/dashboard" className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition-all">الرئيسية</Link>
-               <Link href="/properties" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">العقارات</Link>
-               <Link href="/import" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">استيراد بيانات</Link>
-               <Link href="/" className="px-4 py-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg font-medium text-sm transition-all flex items-center gap-1">
-                   <HomeIcon className="w-4 h-4" />
-                   الموقع العام
-               </Link>
-            </nav>
-
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex flex-col items-end mr-2">
-                 <span className="text-sm font-bold text-slate-200">{user?.email?.split('@')[0]}</span>
-                 <span className="text-xs text-slate-400">مدير النظام</span>
-              </div>
-              <button 
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition-all text-sm font-bold"
-              >
-                <LogoutIcon className="w-4 h-4" />
-                <span>خروج</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminHeader user={user} title="لوحة التحكم" />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}

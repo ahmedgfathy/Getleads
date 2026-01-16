@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import AdminHeader from '@/app/components/AdminHeader'
 
 export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -124,8 +125,10 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <AdminHeader />
+      <div className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
         <div className="text-start mb-8">
            <Link href="/properties" className="text-indigo-600 hover:text-indigo-500 font-medium flex items-center">
              <svg className="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,5 +290,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         </form>
       </div>
     </div>
+  </div>
   )
 }

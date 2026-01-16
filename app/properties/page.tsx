@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
+import AdminHeader from '@/app/components/AdminHeader'
 
 interface Property {
   id: string
@@ -219,45 +220,7 @@ export default function PropertiesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans" dir="rtl">
-      <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center font-bold text-xl shadow-inner border border-emerald-600">R</div>
-               <div>
-                  <h1 className="font-bold text-xl leading-none">إدارة العقارات</h1>
-                  <span className="text-xs text-slate-400">الرواد العقارية</span>
-               </div>
-            </div>
-            
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex gap-1 bg-slate-800/50 p-1 rounded-xl">
-               <Link href="/dashboard" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">الرئيسية</Link>
-               <Link href="/properties" className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition-all">العقارات</Link>
-               <Link href="/import" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">استيراد بيانات</Link>
-               <Link href="/" className="px-4 py-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg font-medium text-sm transition-all flex items-center gap-1">
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                   الموقع العام
-               </Link>
-            </nav>
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex flex-col items-end mr-2">
-                 <span className="text-sm font-bold text-slate-200">{user?.email?.split('@')[0]}</span>
-                 <span className="text-xs text-slate-400">مدير النظام</span>
-              </div>
-              <button 
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition-all text-sm font-bold"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                <span>خروج</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminHeader user={user} title="إدارة العقارات" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
