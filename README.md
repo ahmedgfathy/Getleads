@@ -5,6 +5,7 @@ A Next.js application with Supabase authentication featuring a login page as the
 ## Features
 
 - 🔐 Supabase Authentication
+- 📊 Leads CRM Module - Complete lead management system
 - 🎨 Modern UI with Tailwind CSS
 - 🌓 Dark mode support
 - ✉️ Email/Password authentication
@@ -52,20 +53,35 @@ npm run dev
 
 1. Create a new project at [Supabase](https://supabase.com)
 2. The authentication is already configured to use Email/Password
-3. Optionally, configure email templates in your Supabase dashboard under Authentication > Email Templates
+3. **Set up the Leads database schema:**
+   - Navigate to the SQL Editor in your Supabase dashboard
+   - Copy and run the SQL from `/database/schema.sql`
+   - See `/database/README.md` for detailed setup instructions
+4. Optionally, configure email templates in your Supabase dashboard under Authentication > Email Templates
 
 ## Project Structure
 
 ```
 ├── app/
-│   ├── dashboard/      # Protected dashboard page
+│   ├── api/
+│   │   └── leads/           # API routes for lead CRUD operations
+│   ├── dashboard/           # Protected dashboard page
 │   │   └── page.tsx
-│   ├── layout.tsx      # Root layout
-│   ├── page.tsx        # Login page (home)
-│   └── globals.css     # Global styles
+│   ├── leads/               # Leads module pages
+│   │   ├── [id]/           # Lead detail and edit pages
+│   │   ├── new/            # New lead form
+│   │   └── page.tsx        # Leads list
+│   ├── layout.tsx           # Root layout
+│   ├── page.tsx             # Login page (home)
+│   └── globals.css          # Global styles
+├── database/
+│   ├── schema.sql           # Database schema for leads
+│   └── README.md            # Database setup instructions
 ├── lib/
-│   └── supabase.ts     # Supabase client configuration
-├── .env.example        # Environment variables template
+│   └── supabase.ts          # Supabase client configuration
+├── types/
+│   └── lead.ts              # TypeScript types for leads
+├── .env.example             # Environment variables template
 └── package.json
 ```
 
@@ -83,6 +99,35 @@ npm run dev
 3. After successful authentication, they're redirected to the dashboard
 4. The dashboard page checks authentication and redirects back to login if not authenticated
 5. Users can sign out from the dashboard
+
+## Leads Management
+
+The application includes a complete CRM leads module with the following features:
+
+### Lead Features
+- **CRUD Operations**: Create, read, update, and delete leads
+- **Lead Information**:
+  - Contact details (name, email, phone, company)
+  - Lead classification (status, priority, type, source)
+  - Property information (category, type, location, budget, size)
+  - Business details (estimated value, close date, probability)
+  - Additional notes and descriptions
+- **Filtering**: Filter leads by status, priority, and search terms
+- **Soft Delete**: Leads are marked as deleted rather than permanently removed
+- **Responsive UI**: Works seamlessly on desktop and mobile devices
+
+### Lead Workflow
+1. Navigate to "Leads" from the dashboard
+2. View all leads in a sortable, filterable table
+3. Create new leads with comprehensive forms
+4. View detailed lead information
+5. Edit lead data as it progresses through the sales pipeline
+6. Track leads through different statuses (new, contacted, qualified, proposal, negotiation, won, lost)
+
+### Database Tables
+- `leads` - Main lead information
+- `lead_activities` - Track interactions (calls, emails, meetings)
+- `lead_documents` - Store related documents
 
 ## Technologies Used
 
