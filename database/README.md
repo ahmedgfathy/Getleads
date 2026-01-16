@@ -17,18 +17,35 @@ Go to your Supabase project dashboard at https://app.supabase.com
 
 ### 2. Run the SQL Schema
 
+⚠️ **IMPORTANT:** If you already have the leads table created, skip this step and go to Step 3.
+
 1. Navigate to the **SQL Editor** in the left sidebar
 2. Click **New Query**
 3. Copy the contents of `/database/schema.sql`
 4. Paste into the SQL editor
 5. Click **Run** or press `Ctrl+Enter` (Windows/Linux) or `Cmd+Enter` (Mac)
 
-### 3. Verify Tables Were Created
+### 3. Create Properties and Contacts Tables (NEW)
 
-After running the schema, you should see the following tables in the **Table Editor**:
+To add the properties and contacts modules:
+
+1. Navigate to the **SQL Editor** in the left sidebar
+2. Click **New Query**
+3. Copy the contents of `/database/properties-contacts-schema.sql`
+4. Paste into the SQL editor
+5. Click **Run** to create the missing tables
+
+### 4. Verify All Tables Were Created
+
+After running both schemas, you should see the following tables in the **Table Editor**:
 - `leads`
 - `lead_activities`
 - `lead_documents`
+- `properties`
+- `contacts`
+- `contact_activities`
+
+**See `/database/SETUP-GUIDE.md` for detailed setup instructions and troubleshooting.**
 
 ## Features Included
 
