@@ -47,8 +47,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="text-gray-600 dark:text-gray-400" style={{ color: '#666' }}>Loading...</div>
       </div>
     )
   }
