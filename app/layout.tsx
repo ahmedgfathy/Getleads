@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Cairo } from "next/font/google"; // Import Cairo font
 import "./globals.css";
 import InstallPrompt from "./components/InstallPrompt";
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  variable: "--font-cairo",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "GetLeads - CRM Application",
@@ -39,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={cairo.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -47,7 +54,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="GetLeads" />
       </head>
-      <body>
+      <body className="font-sans">
         {children}
         <InstallPrompt />
       </body>
