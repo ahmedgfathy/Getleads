@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { FacebookIcon } from '@/app/components/FacebookIcon'
 
 // --- Reusing Icons for consistency ---
 const UserIcon = ({ className }: { className?: string }) => (
@@ -33,36 +34,55 @@ const PhoneIcon = ({ className }: { className?: string }) => (
     </svg>
 )
 
-import { FacebookIcon } from '@/app/components/FacebookIcon'
-
 function AllPropertiesContent() {
     const [properties, setProperties] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState<any>(null)
+    const [pagination, setPagination] = useState<any>(null)
+    
+    const router = useRouter()
     const searchParams = useSearchParams()
     
     // Status can be 'sale', 'rent', or anything
     const typeParam = searchParams.get('type')
+    const pageParam = searchParams.get('page')
+    
+    const currentPage = pageParam ? parseInt(pageParam) : 1
     const filterTitle = typeParam === 'sale' ? 'عقارات للبيع' : typeParam === 'rent' ? 'عقارات للإيجار' : 'كل العقارات'
 
     useEffect(() => {
         checkUser()
-        fetchProperties()
-    }, [typeParam])
+        fetchProperties(currentPage)
+    }, [typeParam, currentPage])
 
     const checkUser = async () => {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
     }
 
-    const fetchProperties = async () => {
+    const fetchProperties = async (page: number) => {
         setLoading(true)
         try {
-            const response = await fetch('/api/properties')
+            // Build query string
+            const params = new URLSearchParams()
+            if (typeParam) params.append('type', typeParam)
+            params.append('page', page.toString())
+            params.append('limit', '20')
+
+            const response = await fetch(`/api/properties?${params.toString()}`)
             if (!response.ok) throw new Error('Failed to fetch')
-            const data = await response.json()
             
-            const processedData = (data || []).map((p: any) => {
+            const result = await response.json()
+            
+            // Handle both old array format (fallback) and new object format
+            const rawData = Array.isArray(result) ? result : (result.data || [])
+            if (result.pagination) {
+                setPagination(result.pagination)
+            } else {
+                setPagination(null)
+            }
+            
+            const processedData = rawData.map((p: any) => {
                 let customFields = {};
                 try {
                    if (typeof p.custom_fields === 'string') customFields = JSON.parse(p.custom_fields);
@@ -85,29 +105,24 @@ function AllPropertiesContent() {
                   mobile_number: '01002778090',
                 };
             });
-
-            // Filter logic
-            let filtered = processedData;
-            if (typeParam === 'sale') {
-                filtered = processedData.filter((p: any) => 
-                    p.status.toLowerCase().includes('sale') || 
-                    p.status.includes('بيع') ||
-                    p.listing_type?.toLowerCase() === 'sale'
-                );
-            } else if (typeParam === 'rent') {
-                 filtered = processedData.filter((p: any) => 
-                    p.status.toLowerCase().includes('rent') || 
-                    p.status.includes('إيجار') ||
-                     p.listing_type?.toLowerCase() === 'rent'
-                );
-            }
-
-            setProperties(filtered)
+            
+            // The API now handles filtering by 'type', so we don't need client-side filtering here
+            setProperties(processedData)
+            
         } catch (error) {
             console.error('Error:', error)
+            setProperties([])
         } finally {
             setLoading(false)
         }
+    }
+
+    const handlePageChange = (newPage: number) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('page', newPage.toString())
+        router.push(`/all-properties?${params.toString()}`)
+        // Optional: Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     return (
@@ -143,8 +158,14 @@ function AllPropertiesContent() {
 
              <main className="max-w-7xl mx-auto px-4 py-8">
                 <div className="mb-8 border-b border-slate-200 pb-4">
-                    <h1 className="text-3xl font-bold text-slate-900">{filterTitle}</h1>
-                    <p className="text-slate-500 mt-2">عرض {properties.length} عقار</p>
+                    <div className="flex justify-between items-baseline">
+                        <h1 className="text-3xl font-bold text-slate-900">{filterTitle}</h1>
+                        {pagination && (
+                            <p className="text-slate-500 text-sm">
+                                العقارات {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} من {pagination.total}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
@@ -152,7 +173,8 @@ function AllPropertiesContent() {
                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-100 border-t-emerald-600"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                         {properties.length > 0 ? properties.map((property) => (
                              <div 
                                 key={property.id} 
@@ -245,6 +267,34 @@ function AllPropertiesContent() {
                             </div>
                         )}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {pagination && pagination.totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 mt-8 pb-12">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage <= 1}
+                                className={`px-4 py-2 rounded-lg border ${currentPage <= 1 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-emerald-500'}`}
+                            >
+                                السابق
+                            </button>
+                            
+                            <div className="flex items-center gap-2 text-slate-600 font-medium dir-ltr">
+                                <span className="text-emerald-600 font-bold">{currentPage}</span>
+                                <span className="text-slate-400">/</span>
+                                <span>{pagination.totalPages}</span>
+                            </div>
+                            
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage >= pagination.totalPages}
+                                className={`px-4 py-2 rounded-lg border ${currentPage >= pagination.totalPages ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-emerald-500'}`}
+                            >
+                                التالي
+                            </button>
+                        </div>
+                    )}
+                    </>
                 )}
              </main>
         </div>

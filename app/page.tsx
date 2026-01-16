@@ -55,6 +55,7 @@ const ArrowIcon = ({ className }: { className?: string }) => (
 )
 
 export default function HomePage() {
+  const [stats, setStats] = useState({ total: 0, aparments: 0, villas: 0, commercial: 0, admin: 0 })
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
@@ -62,7 +63,8 @@ export default function HomePage() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    fetchProperties()
+    fetchStats()
+    fetchLatestProperties()
     checkUser()
 
     const handleScroll = () => {
@@ -77,44 +79,51 @@ export default function HomePage() {
     setUser(user)
   }
 
-  const fetchProperties = async () => {
+  const fetchStats = async () => {
     try {
-      const response = await fetch('/api/properties')
-      if (!response.ok) throw new Error('Failed to fetch')
-      const data = await response.json()
-      
-      const processedData = (data || []).map((p: any) => {
-        let customFields = {};
-        try {
-           if (typeof p.custom_fields === 'string') customFields = JSON.parse(p.custom_fields);
-           else customFields = p.custom_fields || {};
-        } catch { customFields = {}; }
-        const anyCF = customFields as any;
-        
-        return {
-          ...p,
-          title: anyCF.property_name_compound_name || p.title,
-          price: Number(p.price || anyCF.total_price || anyCF.price || 0),
-          city: p.city || anyCF.area || anyCF.location || anyCF.compound || '',
-          property_type: p.property_type || anyCF.type || anyCF.property_type || 'Unknown',
-          property_category: p.property_category || anyCF.category || 'General',
-          status: p.status || anyCF.unit_for || 'Available',
-          bedrooms: p.bedrooms || anyCF.rooms || anyCF.bedrooms || 0,
-          bathrooms: p.bathrooms || anyCF.bathrooms || 0,
-          area: p.area || anyCF.space || anyCF.area || 0,
-          description: String(p.description || anyCF.description || ''),
-          owner_name: 'الرواد العقارية',
-          mobile_number: '01002778090',
-          original_owner: String(anyCF.name || anyCF.owner_name || ''),
-        };
-      });
-
-      setProperties(processedData)
+      const response = await fetch('/api/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      }
     } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error fetching stats:', error)
     }
+  }
+
+  const fetchLatestProperties = async () => {
+      try {
+        const response = await fetch('/api/properties?limit=6')
+        if (response.ok) {
+           const result = await response.json()
+           const rawData = result.data || result
+           
+           const processed = (Array.isArray(rawData) ? rawData : []).map((p: any) => {
+               let cf = {};
+               try {
+                  if (typeof p.custom_fields === 'string') cf = JSON.parse(p.custom_fields);
+                  else cf = p.custom_fields || {};
+               } catch { cf = {}; }
+               const acf = cf as any;
+               
+               return {
+                  ...p,
+                  title: acf.property_name_compound_name || p.title,
+                  price: Number(p.price || acf.total_price || acf.price || 0),
+                  city: p.city || acf.area || acf.location || '',
+                  status: p.status || acf.unit_for || 'Available',
+                  property_type: p.property_type || acf.type || 'Property',
+                  property_category: p.property_category || acf.category || 'General',
+                  bedrooms: p.bedrooms || acf.rooms || acf.bedrooms || 0,
+                  bathrooms: p.bathrooms || acf.bathrooms || 0,
+                  area: p.area || acf.space || acf.area || 0,
+                  mobile_number: '01002778090',
+               };
+           });
+           setProperties(processed)
+        }
+      } catch (e) { console.error(e) }
+      finally { setLoading(false) }
   }
 
   return (
@@ -139,22 +148,15 @@ export default function HomePage() {
             </div>
             
             {/* Desktop Nav */}
-            <nav className="hidden md:flex space-x-8 space-x-reverse items-center">
-              {[
-                ['الرئيسية', '/'],
-                ['بيع', '/all-properties?type=sale'],
-                ['إيجار', '/all-properties?type=rent'],
-                ['من نحن', '/about'],
-                ['اتصل بنا', '/contact']
-              ].map(([label, href]) => (
-                <Link 
-                  key={label}
-                  href={href} 
-                  className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400"
-                >
-                  {label}
-                </Link>
-              ))}
+            <nav className="hidden md:flex gap-10 items-center">
+              <Link href="/" className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400">الرئيسية</Link>
+              <Link href="/all-properties?type=sale" className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400">بيع</Link>
+              <Link href="/all-properties?type=rent" className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400">إيجار</Link>
+              
+              <div className="w-px h-4 bg-slate-600/50 mx-2"></div> {/* Separator */}
+
+              <Link href="/about" className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400">من نحن</Link>
+              <Link href="/contact" className="text-sm font-medium transition-colors text-white/90 hover:text-emerald-400">اتصل بنا</Link>
             </nav>
 
             {/* Actions */}
@@ -286,18 +288,34 @@ export default function HomePage() {
             </div>
             
             {/* Stats */}
-            <div className="mt-12 flex justify-center gap-8 md:gap-16 text-white/80">
+            <div className="mt-12 flex flex-wrap justify-center gap-8 md:gap-16 text-white/80">
                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-white">200+</span>
+                  <span className="text-3xl font-bold text-white">{loading ? '...' : stats.total}</span>
                   <span className="text-sm">عقار متاح</span>
                </div>
                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-white">50+</span>
-                  <span className="text-sm">منطقة</span>
+                  <span className="text-3xl font-bold text-white">
+                      {loading ? '...' : stats.aparments}
+                  </span>
+                  <span className="text-sm">شقة</span>
                </div>
                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-white">24/7</span>
-                  <span className="text-sm">دعم فني</span>
+                  <span className="text-3xl font-bold text-white">
+                      {loading ? '...' : stats.villas}
+                  </span>
+                  <span className="text-sm">فيلا</span>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white">
+                      {loading ? '...' : stats.commercial}
+                  </span>
+                  <span className="text-sm">تجاري</span>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-3xl font-bold text-white">
+                       {loading ? '...' : stats.admin}
+                  </span>
+                  <span className="text-sm">إداري</span>
                </div>
             </div>
          </div>

@@ -28,7 +28,22 @@ export async function GET(request: Request) {
         );
       }
     } else {
-      // Fetch all properties
+      // Pagination & Filtering
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '20');
+      const offset = (page - 1) * limit;
+      const type = searchParams.get('type'); // 'sale' or 'rent'
+
+      let whereClause = 'WHERE is_deleted = 0';
+      const params: any[] = [];
+
+      if (type === 'sale') {
+          whereClause += ` AND (custom_fields LIKE '%sale%' OR custom_fields LIKE '%بيع%' OR listing_type = 'sale' OR status LIKE '%sale%')`;
+      } else if (type === 'rent') {
+          whereClause += ` AND (custom_fields LIKE '%rent%' OR custom_fields LIKE '%إيجار%' OR listing_type = 'rent' OR status LIKE '%rent%')`;
+      }
+
+      // Fetch filtered properties with pagination
       const properties = await query(`
         SELECT 
           id, title, property_category, property_type, listing_type,
@@ -36,11 +51,27 @@ export async function GET(request: Request) {
           status, reference_number, street_address, description,
           custom_fields, created_at, updated_at
         FROM properties 
-        WHERE is_deleted = 0 
+        ${whereClause}
         ORDER BY created_at DESC
-      `);
+        LIMIT ? OFFSET ?
+      `, [...params, limit, offset]);
 
-      return NextResponse.json(properties);
+      // Get total count for pagination UI
+      const countResult = await query(`
+         SELECT COUNT(*) as total FROM properties ${whereClause}
+      `, params);
+      
+      const total = Array.isArray(countResult) && countResult.length > 0 ? Number(countResult[0].total) : 0;
+
+      return NextResponse.json({
+          data: properties,
+          pagination: {
+              page,
+              limit,
+              total,
+              totalPages: Math.ceil(total / limit)
+          }
+      });
     }
   } catch (error) {
     console.error('Error fetching properties:', error);

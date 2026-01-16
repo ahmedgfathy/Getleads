@@ -64,87 +64,25 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      // Fetch properties data from API
-      const response = await fetch('/api/properties')
-      if (!response.ok) throw new Error('Failed to fetch properties')
-      const items = await response.json()
+      const response = await fetch('/api/stats')
+      if (!response.ok) throw new Error('Failed to fetch stats')
+      const data = await response.json()
 
-      if (items) {
-        // Calculate statistics based on properties
-        
-        // Helper to safely get property attributes
-        const getAttr = (item: any, attr: string, ...customKeys: string[]): string => {
-           let val = item[attr];
-           // If value exists and isn't generic/placeholder, use it
-           if (val && !['other', 'general', 'unknown', '--', 'undefined', 'null'].includes(String(val).toLowerCase())) {
-              return String(val).toLowerCase();
-           }
-           
-           let cf = item.custom_fields;
-           if (typeof cf === 'string') {
-             try { cf = JSON.parse(cf); } catch { cf = {}; }
-           }
-           if (!cf) cf = {};
-           
-           for (const k of customKeys) {
-             if (cf[k]) return String(cf[k]).toLowerCase();
-           }
-           // Fallback to the generic value if no custom field found
-           return val ? String(val).toLowerCase() : '';
-        }
-
-        const commercial = items.filter((i: any) => {
-           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
-           return cat.includes('commercial');
-        }).length
-        
-        const residential = items.filter((i: any) => {
-           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
-           return cat.includes('residential');
-        }).length
-        
-        const manufacturing = items.filter((i: any) => {
-           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
-           return cat.includes('manufacturing');
-        }).length
-        
-        const apartments = items.filter((i: any) => {
-           const type = getAttr(i, 'property_type', 'type', 'Unit Type');
-           return type.includes('apartment') || type.includes('flat') || type.includes('studio');
-        }).length
-        
-        const villas = items.filter((i: any) => {
-           const type = getAttr(i, 'property_type', 'type', 'Unit Type');
-           return type.includes('villa') || type.includes('house') || type.includes('stand alone') || type.includes('town') || type.includes('twin') || type.includes('palace');
-        }).length
-
-        // Group by status
-        const bySource: { [key: string]: number } = {}
-        items.forEach((item: any) => {
-          const status = getAttr(item, 'status', 'Status') || 'unknown';
-          bySource[status] = (bySource[status] || 0) + 1
-        })
-
-        // Group by type
-        const byType: { [key: string]: number } = {}
-        items.forEach((item: any) => {
-          const type = getAttr(item, 'property_type', 'type', 'Unit Type') || 'unknown';
-          // Capitalize for display
-          const displayType = type.charAt(0).toUpperCase() + type.slice(1);
-          byType[displayType] = (byType[displayType] || 0) + 1
-        })
-
-        setStats({
-          totalLeads: items.length, // Displaying total properties count
-          commercial,
-          residential,
-          manufacturing,
-          apartments,
-          villas,
-          leadsBySource: bySource,
-          leadsByType: byType
-        })
-      }
+      setStats({
+          totalLeads: data.total || 0,
+          commercial: data.commercial || 0,
+          residential: (data.aparments + data.villas) || 0,
+          manufacturing: 0,
+          apartments: data.aparments || 0,
+          villas: data.villas || 0,
+          leadsBySource: { 'Total': data.total || 0 },
+          leadsByType: {
+            'Apartments': data.aparments || 0,
+            'Villas': data.villas || 0,
+            'Commercial': data.commercial || 0,
+            'Admin': data.admin || 0 
+          }
+      })
     } catch (error) {
       console.error('Error fetching stats:', error)
     } finally {

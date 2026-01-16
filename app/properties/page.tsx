@@ -63,12 +63,15 @@ export default function PropertiesPage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('/api/properties');
+      const response = await fetch('/api/properties?limit=50');
       if (!response.ok) throw new Error('Failed to fetch');
-      const data = await response.json();
+      const result = await response.json();
+      
+      // Handle new pagination structure
+      const data = result.data || result;
       
       // Process properties to handle custom_fields
-      const processedData = (data || []).map((p: any) => {
+      const processedData = (Array.isArray(data) ? data : []).map((p: any) => {
         let customFields = {};
         try {
           if (typeof p.custom_fields === 'string') {
