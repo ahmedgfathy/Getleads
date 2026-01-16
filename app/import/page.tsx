@@ -1,14 +1,31 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function ImportPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [entityType, setEntityType] = useState<'contact' | 'property' | 'organization' | 'lead'>('contact');
+  const [entityType, setEntityType] = useState<'contact' | 'property' | 'organization' | 'lead'>('property');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -89,36 +106,59 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 font-sans" dir="rtl">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/properties" className="group flex items-center text-gray-500 hover:text-gray-900 transition-colors">
-                <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </div>
-                <span className="ms-2 font-medium">Back to Properties</span>
-              </Link>
-              <div className="h-6 w-px bg-gray-300 mx-2"></div>
-              <h1 className="text-2xl font-bold text-gray-900">Bulk Import</h1>
+      <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-20 items-center">
+             {/* Logo */}
+            <div className="flex items-center gap-3">
+               <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center font-bold text-xl shadow-inner border border-emerald-600">R</div>
+               <div>
+                  <h1 className="font-bold text-xl leading-none">استيراد البيانات</h1>
+                  <span className="text-xs text-slate-400">الرواد العقارية</span>
+               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/import/history"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex gap-1 bg-slate-800/50 p-1 rounded-xl">
+               <Link href="/dashboard" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">الرئيسية</Link>
+               <Link href="/properties" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">العقارات</Link>
+               <Link href="/import" className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition-all">استيراد بيانات</Link>
+               <Link href="/" className="px-4 py-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg font-medium text-sm transition-all flex items-center gap-1">
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                   الموقع العام
+               </Link>
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex flex-col items-end mr-2">
+                 <span className="text-sm font-bold text-slate-200">{user?.email?.split('@')[0]}</span>
+                 <span className="text-xs text-slate-400">مدير النظام</span>
+              </div>
+              <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition-all text-sm font-bold"
               >
-                Import History
-              </Link>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span>خروج</span>
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-end mb-6">
+           <Link
+                href="/import/history"
+                className="px-6 py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
+              >
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                سجل الاستيراد
+           </Link>
+        </div>
         {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div className="flex">

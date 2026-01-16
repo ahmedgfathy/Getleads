@@ -3,9 +3,32 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+
+// --- Icons ---
+const HomeIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+)
+const BuildingIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+)
+const UploadIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    </svg>
+)
+const LogoutIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+)
 
 interface Stats {
   totalLeads: number
@@ -38,7 +61,7 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        router.push('/')
+        router.push('/login')
       } else {
         setUser(user)
         await fetchStats()
@@ -53,7 +76,7 @@ export default function DashboardPage() {
       if (session?.user) {
         setUser(session.user)
       } else {
-        router.push('/')
+        router.push('/login')
       }
     })
 
@@ -92,268 +115,173 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
+    router.push('/login')
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-100 border-t-emerald-600"></div>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow-sm">
+    <div className="min-h-screen bg-slate-50 font-sans" dir="rtl">
+      {/* Header */}
+      <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">GetLeads</h1>
-              <div className="flex space-x-2">
-                <a href="/dashboard" className="p-2 rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" title="Dashboard">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </a>
-                <a href="/properties" className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" title="Properties">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </a>
-                <a href="/contacts" className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" title="Contacts">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </a>
-                <a href="/leads" className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" title="Leads">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </a>
-                <a href="/organizations" className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" title="Organizations">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </a>
-                <a href="/import" className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" title="Bulk Import">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                </a>
-              </div>
+          <div className="flex justify-between h-20 items-center">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+               <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center font-bold text-xl shadow-inner border border-emerald-600">R</div>
+               <div>
+                  <h1 className="font-bold text-xl leading-none">لوحة التحكم</h1>
+                  <span className="text-xs text-slate-400">الرواد العقارية</span>
+               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {user.email}
-              </span>
-              <button
+            
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex gap-1 bg-slate-800/50 p-1 rounded-xl">
+               <Link href="/dashboard" className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition-all">الرئيسية</Link>
+               <Link href="/properties" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">العقارات</Link>
+               <Link href="/import" className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg font-medium text-sm transition-all">استيراد بيانات</Link>
+               <Link href="/" className="px-4 py-2 text-emerald-400 hover:bg-emerald-900/30 rounded-lg font-medium text-sm transition-all flex items-center gap-1">
+                   <HomeIcon className="w-4 h-4" />
+                   الموقع العام
+               </Link>
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex flex-col items-end mr-2">
+                 <span className="text-sm font-bold text-slate-200">{user?.email?.split('@')[0]}</span>
+                 <span className="text-xs text-slate-400">مدير النظام</span>
+              </div>
+              <button 
                 onClick={handleSignOut}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition-all text-sm font-bold"
               >
-                Sign out
+                <LogoutIcon className="w-4 h-4" />
+                <span>خروج</span>
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Welcome back, {user.email?.split('@')[0]}!
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Here's an overview of your real estate leads
-            </p>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-900">مرحباً بك مجدداً 👋</h2>
+            <p className="text-slate-500 mt-2">إليك ملخص سريع لأداء العقارات والبيانات المسجلة.</p>
           </div>
-
-          {/* Overview Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div className="ms-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Total Leads
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.totalLeads}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div className="ms-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Commercial
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.commercial}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </div>
-                <div className="ms-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Residential
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.residential}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="ms-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      Manufacturing
-                    </dt>
-                    <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.manufacturing}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Property Types & Lead Sources */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Property Types */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Property Types
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Apartments</span>
-                  <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${stats.totalLeads > 0 ? (stats.apartments / stats.totalLeads) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
-                      {stats.apartments}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Villas</span>
-                  <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full" 
-                        style={{ width: `${stats.totalLeads > 0 ? (stats.villas / stats.totalLeads) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
-                      {stats.villas}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Lead Sources */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Lead Sources
-              </h3>
-              <div className="space-y-4">
-                {Object.entries(stats.leadsBySource).length > 0 ? (
-                  Object.entries(stats.leadsBySource).map(([source, count]) => (
-                    <div key={source} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">{source}</span>
-                      <div className="flex items-center">
-                        <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
-                          <div 
-                            className="bg-indigo-600 h-2 rounded-full" 
-                            style={{ width: `${stats.totalLeads > 0 ? (count / stats.totalLeads) * 100 : 0}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No lead sources yet</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Lead Types */}
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Lead Types Distribution
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(stats.leadsByType).length > 0 ? (
-                Object.entries(stats.leadsByType).map(([type, count]) => (
-                  <div key={type} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {count}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 capitalize mt-1">
-                      {type}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-4 text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400">No leads data available yet</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-                    Start adding leads to see statistics
-                  </p>
-                </div>
-              )}
-            </div>
+          <div className="flex gap-3">
+             <Link href="/properties/new" className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center gap-2">
+                <span>+ إضافة عقار</span>
+             </Link>
+             <Link href="/import" className="bg-white text-slate-700 border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 px-5 py-3 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2">
+                <UploadIcon className="w-5 h-5" />
+                <span>رفع ملفات</span>
+             </Link>
           </div>
         </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {/* Total Card */}
+           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <BuildingIcon className="w-6 h-6" />
+                 </div>
+                 <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">الكل</span>
+              </div>
+              <h3 className="text-slate-400 text-sm font-medium mb-1">إجمالي العقارات</h3>
+              <p className="text-3xl font-bold text-slate-900">{stats.totalLeads.toLocaleString()}</p>
+           </div>
+
+           {/* Residential Card */}
+           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <HomeIcon className="w-6 h-6" />
+                 </div>
+                 <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">سكني</span>
+              </div>
+              <h3 className="text-slate-400 text-sm font-medium mb-1">شقق وفيلات</h3>
+              <p className="text-3xl font-bold text-slate-900">{stats.residential.toLocaleString()}</p>
+           </div>
+
+           {/* Commercial Card */}
+           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                 </div>
+                 <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">تجاري</span>
+              </div>
+              <h3 className="text-slate-400 text-sm font-medium mb-1">محلات ومكاتب</h3>
+              <p className="text-3xl font-bold text-slate-900">{stats.commercial.toLocaleString()}</p>
+           </div>
+
+           {/* Admin Card */}
+           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 rounded-2xl bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                 </div>
+                 <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">إداري</span>
+              </div>
+              <h3 className="text-slate-400 text-sm font-medium mb-1">مكاتب إدارية</h3>
+              <p className="text-3xl font-bold text-slate-900">{(stats.leadsByType['Admin'] || 0).toLocaleString()}</p>
+           </div>
+        </div>
+
+        {/* Detailed Stats */}
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Property Types Detail */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                 <span className="w-2 h-8 bg-emerald-500 rounded-full"></span>
+                 توزيع الوحدات
+              </h3>
+              <div className="space-y-6">
+                 {Object.entries(stats.leadsByType).map(([key, value]) => (
+                    <div key={key}>
+                       <div className="flex justify-between items-end mb-2">
+                          <span className="font-medium text-slate-700">{key === 'Apartments' ? 'شقق' : key === 'Villas' ? 'فيلل' : key === 'Commercial' ? 'تجاري' : key === 'Admin' ? 'إداري': key}</span>
+                          <span className="font-bold text-slate-900">{value}</span>
+                       </div>
+                       <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                          <div 
+                             className="bg-emerald-500 h-3 rounded-full transition-all duration-1000" 
+                             style={{ width: `${stats.totalLeads > 0 ? (value / stats.totalLeads) * 100 : 0}%` }}
+                          ></div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+            </div>
+
+            {/* Quick Tips or Empty State */}
+            <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16"></div>
+                
+                <div className="relative z-10">
+                   <h3 className="text-2xl font-bold mb-4">نصيحة إدارية 💡</h3>
+                   <p className="text-slate-300 leading-relaxed text-lg mb-8">
+                      تأكد من تحديث حالة العقارات بشكل دوري. العقارات ذات البيانات المكتملة (صور، موقع دقيق، سعر) تحصل على فرص بيع أعلى بنسبة 40%.
+                   </p>
+                   <Link href="/properties" className="inline-block bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-colors">
+                      إدارة العقارات
+                   </Link>
+                </div>
+            </div>
+         </div>
+
       </main>
     </div>
   )
