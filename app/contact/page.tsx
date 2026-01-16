@@ -19,6 +19,18 @@ export default function ContactPage() {
                         <Link href="/all-properties?type=rent" className="hover:text-emerald-400 text-slate-300">إيجار</Link>
                         <Link href="/about" className="hover:text-emerald-400 text-slate-300">من نحن</Link>
                         <Link href="/contact" className="hover:text-emerald-400 text-white">اتصل بنا</Link>
+
+                        <div className="flex items-center gap-3 mr-4 border-r border-slate-700 pr-4">
+                            <a 
+                                href="https://www.facebook.com/elrowadrealestates" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-[#1877F2] text-white transition-all duration-300"
+                                aria-label="Facebook"
+                            >
+                                <FacebookIcon className="w-4 h-4" />
+                            </a>
+                        </div>
                     </nav>
                 </div>
              </header>
@@ -112,4 +124,8 @@ export default function ContactPage() {
                             </div>
                         </div>
                     </div>
-          
+                </div>
+            </main>
+         </div>
+    )
+}
