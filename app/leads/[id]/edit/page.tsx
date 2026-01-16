@@ -2,14 +2,13 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Lead, UpdateLeadInput } from '@/types/lead'
 
-export default function EditLeadPage() {
+export default function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const params = useParams()
-  const id = params?.id as string
+  const [id, setId] = useState<string>('')
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -21,6 +20,16 @@ export default function EditLeadPage() {
   })
 
   useEffect(() => {
+    const initPage = async () => {
+      const resolvedParams = await params
+      setId(resolvedParams.id)
+    }
+    initPage()
+  }, [params])
+
+  useEffect(() => {
+    if (!id) return
+    
     const checkAuthAndFetchLead = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {

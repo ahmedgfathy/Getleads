@@ -2,18 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Lead, LeadStatus, LeadPriority } from '@/types/lead'
 
-export default function LeadDetailPage() {
+export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [lead, setLead] = useState<Lead | null>(null)
   const [loading, setLoading] = useState(true)
+  const [id, setId] = useState<string>('')
   const router = useRouter()
-  const params = useParams()
-  const id = params?.id as string
 
   useEffect(() => {
+    const initPage = async () => {
+      const resolvedParams = await params
+      setId(resolvedParams.id)
+    }
+    initPage()
+  }, [params])
+
+  useEffect(() => {
+    if (!id) return
+    
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
