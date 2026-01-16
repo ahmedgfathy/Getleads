@@ -70,7 +70,7 @@ export default function NewLeadPage() {
       if (cleanData.property_budget) cleanData.property_budget = parseFloat(cleanData.property_budget)
       if (cleanData.property_size) cleanData.property_size = parseFloat(cleanData.property_size)
       if (cleanData.estimated_value) cleanData.estimated_value = parseFloat(cleanData.estimated_value)
-      if (cleanData.probability) cleanData.probability = parseInt(cleanData.probability)
+      if (cleanData.probability) cleanData.probability = parseFloat(cleanData.probability)
 
       const { data: lead, error } = await supabase
         .from('leads')

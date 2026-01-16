@@ -87,7 +87,7 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
       if (updateData.property_budget) updateData.property_budget = parseFloat(updateData.property_budget)
       if (updateData.property_size) updateData.property_size = parseFloat(updateData.property_size)
       if (updateData.estimated_value) updateData.estimated_value = parseFloat(updateData.estimated_value)
-      if (updateData.probability) updateData.probability = parseInt(updateData.probability)
+      if (updateData.probability) updateData.probability = parseFloat(updateData.probability)
 
       const { error } = await supabase
         .from('leads')
