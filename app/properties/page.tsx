@@ -21,6 +21,7 @@ export default function PropertiesPage() {
   const [user, setUser] = useState<User | null>(null)
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -57,6 +58,16 @@ export default function PropertiesPage() {
     await supabase.auth.signOut()
     router.push('/')
   }
+
+  const filteredProperties = properties.filter(property => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      property.title?.toLowerCase().includes(searchLower) ||
+      property.city?.toLowerCase().includes(searchLower) ||
+      property.property_category?.toLowerCase().includes(searchLower) ||
+      property.property_type?.toLowerCase().includes(searchLower)
+    )
+  })
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -135,52 +146,67 @@ export default function PropertiesPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div className="mb-4 md:mb-0">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Properties</h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Manage your real estate listings
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {properties.length} {properties.length === 1 ? 'property' : 'properties'}
               </p>
             </div>
-            <Link
-              href="/properties/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Property
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search properties..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                />
+                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <Link
+                href="/properties/new"
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Property
+              </Link>
+            </div>
           </div>
 
-          {/* Properties List */}
-          {properties.length === 0 ? (
+          {filteredProperties.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No properties</h3>
+              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">
+                {searchTerm ? 'No properties found' : 'No properties'}
+              </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Get started by creating a new property listing.
+                {searchTerm ? 'Try adjusting your search' : 'Get started by creating a new property listing.'}
               </p>
-              <div className="mt-6">
-                <Link
-                  href="/properties/new"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Your First Property
-                </Link>
-              </div>
+              {!searchTerm && (
+                <div className="mt-6">
+                  <Link
+                    href="/properties/new"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Your First Property
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
+              {filteredProperties.map((property) => (
                 <div key={property.id} className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
@@ -227,7 +253,6 @@ export default function PropertiesPage() {
               ))}
             </div>
           )}
-        </div>
       </main>
     </div>
   )
