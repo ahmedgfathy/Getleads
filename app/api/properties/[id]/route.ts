@@ -7,21 +7,21 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const leads = await query(
-      `SELECT * FROM leads WHERE id = ? AND is_deleted = 0`,
+    const results = await query(
+      `SELECT * FROM properties WHERE id = ? AND is_deleted = 0`,
       [id]
     );
 
-    if (Array.isArray(leads) && leads.length > 0) {
-      return NextResponse.json({ lead: leads[0] });
+    if (Array.isArray(results) && results.length > 0) {
+      return NextResponse.json(results[0]);
     } else {
       return NextResponse.json(
-        { error: 'Lead not found' },
+        { error: 'Property not found' },
         { status: 404 }
       );
     }
   } catch (error) {
-    console.error('Error fetching lead:', error);
+    console.error('Error fetching property:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -41,58 +41,48 @@ export async function PUT(
     const safeValue = (val: any) => val === undefined ? null : val;
 
     await query(
-      `UPDATE leads SET
-        first_name = ?,
-        last_name = ?,
-        email = ?,
-        phone = ?,
-        company = ?,
-        job_title = ?,
-        lead_source = ?,
-        lead_status = ?,
-        lead_priority = ?,
+      `UPDATE properties SET
+        title = ?,
         property_category = ?,
         property_type = ?,
-        property_budget = ?,
+        listing_type = ?,
+        price = ?,
+        area = ?,
+        bedrooms = ?,
+        bathrooms = ?,
         city = ?,
-        state = ?,
-        country = ?,
-        description = ?,
-        notes = ?,
         updated_at = NOW()
        WHERE id = ?`,
       [
-        safeValue(body.first_name),
-        safeValue(body.last_name),
-        safeValue(body.email),
-        safeValue(body.phone),
-        safeValue(body.company),
-        safeValue(body.job_title),
-        safeValue(body.lead_source),
-        safeValue(body.lead_status),
-        safeValue(body.lead_priority),
+        safeValue(body.title),
         safeValue(body.property_category),
         safeValue(body.property_type),
-        safeValue(body.property_budget),
+        safeValue(body.listing_type),
+        safeValue(body.price),
+        safeValue(body.area),
+        safeValue(body.bedrooms),
+        safeValue(body.bathrooms),
         safeValue(body.city),
-        safeValue(body.state),
-        safeValue(body.country),
-        safeValue(body.description),
-        safeValue(body.notes),
         id
       ]
     );
 
+    // Also update custom_fields if provided
     if (body.custom_fields) {
+       // First get existing custom_fields to merge or overwrite
+       // For now, assuming we just update the specific column if we had a deep merge utility
+       // But simpler is to just update whatever is passed if it's the full object, 
+       // or we rely on the client to send the full latest object.
+       
        await query(
-         `UPDATE leads SET custom_fields = ? WHERE id = ?`,
+         `UPDATE properties SET custom_fields = ? WHERE id = ?`,
          [JSON.stringify(body.custom_fields), id]
        );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating lead:', error);
+    console.error('Error updating property:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -107,12 +97,12 @@ export async function DELETE(
   try {
     const { id } = await params;
     await query(
-      `UPDATE leads SET is_deleted = 1 WHERE id = ?`,
+      `UPDATE properties SET is_deleted = 1 WHERE id = ?`,
       [id]
     );
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting lead:', error);
+    console.error('Error deleting property:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

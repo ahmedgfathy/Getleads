@@ -46,13 +46,39 @@ export default function OrganizationsPage() {
 
   const fetchOrganizations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const response = await fetch('/api/organizations')
+      if (!response.ok) throw new Error('Failed to fetch organizations')
+      const data = await response.json()
+      
+      // Process organizations to handle custom_fields
+      const processedData = (data || []).map((org: any) => {
+        let customFields = {};
+        try {
+          if (typeof org.custom_fields === 'string') {
+            customFields = JSON.parse(org.custom_fields);
+          } else {
+            customFields = org.custom_fields || {};
+          }
+        } catch (e) {
+          console.error('Error parsing custom_fields', e);
+        }
 
-      if (error) throw error
-      setOrganizations(data || [])
+        const anyCF = customFields as any;
+
+        return {
+          ...org,
+          name: org.name || anyCF.name || 'Unknown Organization',
+          email: org.email || anyCF.email || '',
+          phone: org.phone || anyCF.phone || '',
+          website: org.website || anyCF.website || '',
+          city: org.city || anyCF.city || '',
+          industry: org.industry || anyCF.industry || '',
+          status: org.status || anyCF.status || 'active',
+          organization_type: org.organization_type || anyCF.organization_type || 'Customer',
+        };
+      });
+
+      setOrganizations(processedData)
     } catch (error) {
       console.error('Error fetching organizations:', error)
     }
@@ -178,9 +204,9 @@ export default function OrganizationsPage() {
                   placeholder="Search organizations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full sm:w-64 ps-10 pe-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute start-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -188,7 +214,7 @@ export default function OrganizationsPage() {
                 href="/organizations/new"
                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Add Organization
@@ -214,7 +240,7 @@ export default function OrganizationsPage() {
                     href="/organizations/new"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
                   >
-                    <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Your First Organization
@@ -249,7 +275,7 @@ export default function OrganizationsPage() {
                   <div className="mt-4 space-y-2">
                     {org.email && (
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 me-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         <span className="truncate">{org.email}</span>
@@ -257,7 +283,7 @@ export default function OrganizationsPage() {
                     )}
                     {org.phone && (
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 me-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                         <span>{org.phone}</span>
@@ -265,7 +291,7 @@ export default function OrganizationsPage() {
                     )}
                     {org.city && (
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 me-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>

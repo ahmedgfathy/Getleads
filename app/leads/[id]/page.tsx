@@ -37,19 +37,41 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const fetchLead = async () => {
     try {
       setLoading(true)
-      const { data: leadData, error } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('id', id)
-        .eq('is_deleted', false)
-        .single()
+      const response = await fetch(`/api/leads/${id}`)
+      if (!response.ok) throw new Error('Failed to fetch lead')
+      const data = await response.json()
+      
+      const leadData = data.lead
+      
+      // Normalize with custom_fields
+      let customFields = {};
+      try {
+        if (typeof leadData.custom_fields === 'string') {
+          customFields = JSON.parse(leadData.custom_fields);
+        } else {
+          customFields = leadData.custom_fields || {};
+        }
+      } catch (e) { console.error(e) }
 
-      if (error) throw error
+      const anyCF = customFields as any;
 
-      setLead(leadData)
+      const normalizedLead = {
+        ...leadData,
+        first_name: leadData.first_name || anyCF.first_name || 'Unknown',
+        last_name: leadData.last_name || anyCF.last_name || '',
+        email: leadData.email || anyCF.email || '',
+        phone: leadData.phone || anyCF.mobile || anyCF.phone || '',
+        lead_status: leadData.lead_status || 'new',
+        custom_fields: customFields
+      };
+
+      setLead(normalizedLead)
     } catch (error) {
       console.error('Error fetching lead:', error)
-      router.push('/leads')
+      // Only redirect on actual error, usually user might be on a valid ID but deleted
+      if (error instanceof Error && error.message.includes('404')) {
+          router.push('/leads')
+      }
     } finally {
       setLoading(false)
     }

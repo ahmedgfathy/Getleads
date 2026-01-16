@@ -307,10 +307,15 @@ export async function POST(request: NextRequest) {
           );
           batchSuccess++;
           importedCount++;
-        } catch (err) {
-          console.error('Error inserting row:', err);
-          batchFailed++;
-          errorCount++;
+        } catch (err: any) {
+          if (err.code === 'ER_DUP_ENTRY') {
+             // Silently counting as duplicate
+             duplicateCount++;
+          } else {
+             console.error('Error inserting row:', err);
+             batchFailed++;
+             errorCount++;
+          }
         }
       }
       

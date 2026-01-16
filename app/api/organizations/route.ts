@@ -3,18 +3,18 @@ import { query } from '@/lib/mariadb';
 
 export async function GET(request: Request) {
   try {
-    const leads = await query(`
+    const organizations = await query(`
       SELECT *
-      FROM leads
+      FROM organizations
       WHERE is_deleted = 0 
       ORDER BY created_at DESC
     `);
 
-    return NextResponse.json(leads);
+    return NextResponse.json(organizations);
   } catch (error) {
-    console.error('Error fetching leads:', error);
+    console.error('Error fetching organizations:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch leads' },
+      { error: 'Failed to fetch organizations' },
       { status: 500 }
     );
   }

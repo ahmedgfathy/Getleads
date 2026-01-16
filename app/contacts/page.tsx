@@ -43,13 +43,38 @@ export default function ContactsPage() {
 
   const fetchContacts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .order('first_name', { ascending: true })
+      const response = await fetch('/api/contacts')
+      if (!response.ok) throw new Error('Failed to fetch contacts')
+      const data = await response.json()
+      
+      // Process contacts to handle custom_fields
+      const processedData = (data || []).map((c: any) => {
+        let customFields = {};
+        try {
+          if (typeof c.custom_fields === 'string') {
+            customFields = JSON.parse(c.custom_fields);
+          } else {
+            customFields = c.custom_fields || {};
+          }
+        } catch (e) {
+          console.error('Error parsing custom_fields', e);
+        }
 
-      if (error) throw error
-      setContacts(data || [])
+        const anyCF = customFields as any;
+
+        return {
+          ...c,
+          first_name: c.first_name || anyCF.first_name || 'Unknown',
+          last_name: c.last_name || anyCF.last_name || '',
+          company: c.company || anyCF.company || '',
+          job_title: c.job_title || anyCF.job_title || '',
+          email: c.email || anyCF.email || '',
+          phone: c.phone || anyCF.phone || anyCF.mobile || '',
+          tags: c.tags || [],
+        };
+      });
+
+      setContacts(processedData)
     } catch (error) {
       console.error('Error fetching contacts:', error)
     }
@@ -163,9 +188,9 @@ export default function ContactsPage() {
                   placeholder="Search contacts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full sm:w-64 ps-10 pe-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute start-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -173,7 +198,7 @@ export default function ContactsPage() {
                 href="/contacts/new"
                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Create Contact
@@ -199,7 +224,7 @@ export default function ContactsPage() {
                     href="/contacts/new"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
                   >
-                    <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Create Your First Contact

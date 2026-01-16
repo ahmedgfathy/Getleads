@@ -95,19 +95,25 @@ export default function ImportPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
+              <Link href="/properties" className="group flex items-center text-gray-500 hover:text-gray-900 transition-colors">
+                <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </div>
+                <span className="ms-2 font-medium">Back to Properties</span>
               </Link>
+              <div className="h-6 w-px bg-gray-300 mx-2"></div>
               <h1 className="text-2xl font-bold text-gray-900">Bulk Import</h1>
             </div>
-            <Link
-              href="/import/history"
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Import History
-            </Link>
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/import/history"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Import History
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -121,7 +127,7 @@ export default function ImportPage() {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-3">
+            <div className="ms-3">
               <h3 className="text-sm font-medium text-blue-800">Supported File Formats</h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>📊 Excel: .xlsx, .xls | 📄 CSV: .csv | 👤 vCard: .vcf | 💬 WhatsApp: .txt</p>

@@ -64,37 +64,78 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      // Fetch leads data from Supabase
-      const { data: leads, error } = await supabase
-        .from('leads')
-        .select('*')
+      // Fetch properties data from API
+      const response = await fetch('/api/properties')
+      if (!response.ok) throw new Error('Failed to fetch properties')
+      const items = await response.json()
 
-      if (error) throw error
+      if (items) {
+        // Calculate statistics based on properties
+        
+        // Helper to safely get property attributes
+        const getAttr = (item: any, attr: string, ...customKeys: string[]): string => {
+           let val = item[attr];
+           // If value exists and isn't generic/placeholder, use it
+           if (val && !['other', 'general', 'unknown', '--', 'undefined', 'null'].includes(String(val).toLowerCase())) {
+              return String(val).toLowerCase();
+           }
+           
+           let cf = item.custom_fields;
+           if (typeof cf === 'string') {
+             try { cf = JSON.parse(cf); } catch { cf = {}; }
+           }
+           if (!cf) cf = {};
+           
+           for (const k of customKeys) {
+             if (cf[k]) return String(cf[k]).toLowerCase();
+           }
+           // Fallback to the generic value if no custom field found
+           return val ? String(val).toLowerCase() : '';
+        }
 
-      if (leads) {
-        // Calculate statistics
-        const commercial = leads.filter(l => l.property_category === 'commercial').length
-        const residential = leads.filter(l => l.property_category === 'residential').length
-        const manufacturing = leads.filter(l => l.property_category === 'manufacturing').length
-        const apartments = leads.filter(l => l.property_type === 'apartment').length
-        const villas = leads.filter(l => l.property_type === 'villa').length
+        const commercial = items.filter((i: any) => {
+           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
+           return cat.includes('commercial');
+        }).length
+        
+        const residential = items.filter((i: any) => {
+           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
+           return cat.includes('residential');
+        }).length
+        
+        const manufacturing = items.filter((i: any) => {
+           const cat = getAttr(i, 'property_category', 'category', 'Unit Category');
+           return cat.includes('manufacturing');
+        }).length
+        
+        const apartments = items.filter((i: any) => {
+           const type = getAttr(i, 'property_type', 'type', 'Unit Type');
+           return type.includes('apartment') || type.includes('flat') || type.includes('studio');
+        }).length
+        
+        const villas = items.filter((i: any) => {
+           const type = getAttr(i, 'property_type', 'type', 'Unit Type');
+           return type.includes('villa') || type.includes('house') || type.includes('stand alone') || type.includes('town') || type.includes('twin') || type.includes('palace');
+        }).length
 
-        // Group by source
+        // Group by status
         const bySource: { [key: string]: number } = {}
-        leads.forEach(lead => {
-          const source = lead.lead_source || 'Unknown'
-          bySource[source] = (bySource[source] || 0) + 1
+        items.forEach((item: any) => {
+          const status = getAttr(item, 'status', 'Status') || 'unknown';
+          bySource[status] = (bySource[status] || 0) + 1
         })
 
         // Group by type
         const byType: { [key: string]: number } = {}
-        leads.forEach(lead => {
-          const type = lead.lead_type || 'Unknown'
-          byType[type] = (byType[type] || 0) + 1
+        items.forEach((item: any) => {
+          const type = getAttr(item, 'property_type', 'type', 'Unit Type') || 'unknown';
+          // Capitalize for display
+          const displayType = type.charAt(0).toUpperCase() + type.slice(1);
+          byType[displayType] = (byType[displayType] || 0) + 1
         })
 
         setStats({
-          totalLeads: leads.length,
+          totalLeads: items.length, // Displaying total properties count
           commercial,
           residential,
           manufacturing,
@@ -106,6 +147,8 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -202,7 +245,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ms-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                       Total Leads
@@ -222,7 +265,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ms-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                       Commercial
@@ -242,7 +285,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ms-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                       Residential
@@ -262,7 +305,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ms-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                       Manufacturing
@@ -287,13 +330,13 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Apartments</span>
                   <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
                       <div 
                         className="bg-blue-600 h-2 rounded-full" 
                         style={{ width: `${stats.totalLeads > 0 ? (stats.apartments / stats.totalLeads) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-right">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
                       {stats.apartments}
                     </span>
                   </div>
@@ -301,13 +344,13 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Villas</span>
                   <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                    <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
                       <div 
                         className="bg-green-600 h-2 rounded-full" 
                         style={{ width: `${stats.totalLeads > 0 ? (stats.villas / stats.totalLeads) * 100 : 0}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-right">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
                       {stats.villas}
                     </span>
                   </div>
@@ -326,13 +369,13 @@ export default function DashboardPage() {
                     <div key={source} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">{source}</span>
                       <div className="flex items-center">
-                        <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                        <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 me-3">
                           <div 
                             className="bg-indigo-600 h-2 rounded-full" 
                             style={{ width: `${stats.totalLeads > 0 ? (count / stats.totalLeads) * 100 : 0}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-right">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-end">
                           {count}
                         </span>
                       </div>
