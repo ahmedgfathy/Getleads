@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -12,6 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPrompt() {
+  const pathname = usePathname()
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
@@ -26,20 +28,10 @@ export default function InstallPrompt() {
       return
     }
 
-    // Check if user has previously dismissed the prompt
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    if (dismissed) {
-      return
-    }
-
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setInstallPrompt(e as BeforeInstallPromptEvent)
-      // Show the prompt after a delay to avoid annoying users immediately
-      setTimeout(() => {
-        setShowPrompt(true)
-      }, 3000)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -60,6 +52,18 @@ export default function InstallPrompt() {
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
+
+  useEffect(() => {
+    if (pathname === '/login' && installPrompt && !isInstalled) {
+       // Check dismissal only when we are about to show
+       const dismissed = localStorage.getItem('pwa-install-dismissed')
+       if (!dismissed) {
+          setShowPrompt(true)
+       }
+    } else {
+       setShowPrompt(false)
+    }
+  }, [pathname, installPrompt, isInstalled])
 
   const handleInstallClick = async () => {
     if (!installPrompt) return
