@@ -1,17 +1,30 @@
 # GetLeads
 
-A Next.js application with Supabase authentication featuring a login page as the default home page.
+A Next.js Progressive Web App (PWA) with Supabase authentication featuring a login page as the default home page.
 
 ## Features
 
 - 🔐 Supabase Authentication
 - 📊 Leads CRM Module - Complete lead management system
+- 📱 Progressive Web App (PWA) - Install on mobile and desktop
+- 💾 Offline Support - Works without internet connection
 - 🎨 Modern UI with Tailwind CSS
 - 🌓 Dark mode support
 - ✉️ Email/Password authentication
 - 🔑 Password reset functionality
 - 📱 Responsive design
 - ⚡ Built with Next.js 16+ App Router
+
+## PWA Features
+
+GetLeads is a fully installable Progressive Web App:
+- **Install on any device**: Android, iOS, or desktop
+- **Offline functionality**: Continue working without internet
+- **Smart caching**: Fast loading with intelligent cache strategies
+- **Install prompt**: Automatic prompt to install the app
+- **Native-like experience**: Full-screen mode and app icon on home screen
+
+For detailed PWA documentation, see [PWA.md](./PWA.md).
 
 ## Getting Started
 
