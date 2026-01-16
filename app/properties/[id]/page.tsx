@@ -44,13 +44,8 @@ export default function PropertyDetailsPage() {
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push('/')
-    } else {
-      setUser(user)
-      await fetchProperty()
-    }
+    setUser(user)
+    await fetchProperty()
     setLoading(false)
   }
 
@@ -244,15 +239,17 @@ export default function PropertyDetailsPage() {
                   )}
                 </div>
               </div>
+              {user && (
               <Link
                 href={`/properties/${property.id}/edit`}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
-                <svg className="h-4 w-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Edit
               </Link>
+              )}
             </div>
           </div>
 
@@ -373,14 +370,14 @@ export default function PropertyDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Created:</span>
-                  <span className="ms-2 text-gray-900 dark:text-white">
+                  <span className="ml-2 text-gray-900 dark:text-white">
                     {new Date(property.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 {property.updated_at && (
                   <div>
                     <span className="text-gray-500 dark:text-gray-400">Last Updated:</span>
-                    <span className="ms-2 text-gray-900 dark:text-white">
+                    <span className="ml-2 text-gray-900 dark:text-white">
                       {new Date(property.updated_at).toLocaleDateString()}
                     </span>
                   </div>
