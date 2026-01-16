@@ -131,8 +131,16 @@ export default function DashboardPage() {
       <nav className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex-shrink-0">
+            <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">GetLeads</h1>
+              <div className="flex space-x-4">
+                <a href="/dashboard" className="text-indigo-600 dark:text-indigo-400 font-medium">
+                  Dashboard
+                </a>
+                <a href="/properties" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                  Properties
+                </a>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700 dark:text-gray-300">
