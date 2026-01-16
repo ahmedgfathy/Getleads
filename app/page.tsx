@@ -178,23 +178,14 @@ export default function HomePage() {
                   <PhoneIcon className="w-4 h-4" />
                </div>
 
-               {/* Login Button */}
-               {user ? (
+               {/* Login Button - Only show if user is logged in */}
+               {user && (
                    <Link
                      href="/dashboard"
                      className="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all transform hover:scale-105 active:scale-95 shadow-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 ring-1 ring-emerald-200"
                    >
                      <UserIcon className="w-5 h-5" />
                      <span>لوحة التحكم</span>
-                   </Link>
-               ) : (
-                  // Hidden for non-admins or subtle login
-                   <Link
-                     href="/login"
-                     className="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all transform hover:scale-105 active:scale-95 shadow-lg bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20"
-                   >
-                     <UserIcon className="w-5 h-5" />
-                     <span>تسجيل دخول</span>
                    </Link>
                )}
             </div>
@@ -231,13 +222,15 @@ export default function HomePage() {
             </a>
 
             <hr className="border-slate-800" />
-            <Link 
-              href={user ? "/dashboard" : "/login"}
-              className="flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-bold"
-            >
-              <UserIcon className="w-5 h-5" />
-              {user ? 'لوحة التحكم' : 'تسجيل دخول'}
-            </Link>
+            {user && (
+              <Link 
+                href="/dashboard"
+                className="flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-bold"
+              >
+                <UserIcon className="w-5 h-5" />
+                لوحة التحكم
+              </Link>
+            )}
           </div>
         )}
       </header>
