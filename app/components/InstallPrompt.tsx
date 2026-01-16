@@ -17,6 +17,9 @@ export default function InstallPrompt() {
   const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
+    // Check if window is available (client-side only)
+    if (typeof window === 'undefined') return
+
     // Check if app is already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
@@ -45,7 +48,9 @@ export default function InstallPrompt() {
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setShowPrompt(false)
-      localStorage.removeItem('pwa-install-dismissed')
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pwa-install-dismissed')
+      }
     }
 
     window.addEventListener('appinstalled', handleAppInstalled)
@@ -79,7 +84,10 @@ export default function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false)
-    localStorage.setItem('pwa-install-dismissed', 'true')
+    // Only access localStorage on client-side
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pwa-install-dismissed', 'true')
+    }
   }
 
   if (isInstalled || !showPrompt) {
